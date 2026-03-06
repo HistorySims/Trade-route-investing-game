@@ -1,1 +1,1376 @@
+<!DOCTYPE html>
 
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trade Routes — Medieval Investment Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=MedievalSharp&display=swap" rel="stylesheet">
+<style>
+:root {
+  --parchment: #f4e8c1;
+  --parchment-dark: #e6d5a8;
+  --ink: #2c1810;
+  --ink-light: #5a3a28;
+  --gold: #c5a035;
+  --gold-bright: #e8c84a;
+  --gold-dark: #8a6d1b;
+  --red-wax: #8b2500;
+  --red-wax-light: #b33a1a;
+  --ocean-blue: #1a4a6e;
+  --desert-tan: #c4a35a;
+  --silk-purple: #6b2d5b;
+  --med-teal: #1a6b5a;
+  --vault-gray: #5a5a5a;
+  --shadow: rgba(44,24,16,0.3);
+}
+
+- { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+font-family: ‘Crimson Text’, Georgia, serif;
+background: #1a1008;
+color: var(–ink);
+min-height: 100vh;
+}
+
+/* Parchment texture via CSS */
+.parchment-bg {
+background:
+radial-gradient(ellipse at 20% 50%, rgba(196,163,90,0.1) 0%, transparent 50%),
+radial-gradient(ellipse at 80% 20%, rgba(139,37,0,0.05) 0%, transparent 50%),
+linear-gradient(180deg, #f4e8c1 0%, #ede0b5 40%, #e6d5a8 100%);
+position: relative;
+}
+
+.parchment-bg::before {
+content: ‘’;
+position: absolute;
+inset: 0;
+background: url(“data:image/svg+xml,%3Csvg width=‘200’ height=‘200’ xmlns=‘http://www.w3.org/2000/svg’%3E%3Cfilter id=‘n’%3E%3CfeTurbulence baseFrequency=‘0.65’ numOctaves=‘3’ stitchTiles=‘stitch’/%3E%3C/filter%3E%3Crect width=‘100%25’ height=‘100%25’ filter=‘url(%23n)’ opacity=‘0.04’/%3E%3C/svg%3E”);
+pointer-events: none;
+z-index: 0;
+}
+
+.parchment-bg > * { position: relative; z-index: 1; }
+
+/* Border decoration */
+.page-border {
+border: 3px solid var(–gold-dark);
+outline: 1px solid var(–gold);
+outline-offset: 4px;
+margin: 12px;
+min-height: calc(100vh - 24px);
+padding: 30px 40px;
+}
+
+@media (max-width: 768px) {
+.page-border { margin: 6px; padding: 16px; }
+}
+
+/* TYPOGRAPHY */
+h1, h2, h3 { font-family: ‘Cinzel’, serif; }
+
+h1 {
+font-size: 2.4rem;
+font-weight: 900;
+color: var(–red-wax);
+text-align: center;
+letter-spacing: 0.08em;
+text-transform: uppercase;
+margin-bottom: 4px;
+text-shadow: 1px 1px 0 rgba(197,160,53,0.3);
+}
+
+.subtitle {
+text-align: center;
+font-family: ‘Cinzel’, serif;
+font-size: 1rem;
+color: var(–gold-dark);
+letter-spacing: 0.15em;
+margin-bottom: 24px;
+}
+
+h2 {
+font-size: 1.5rem;
+font-weight: 700;
+color: var(–ink);
+margin-bottom: 12px;
+border-bottom: 2px solid var(–gold);
+padding-bottom: 6px;
+display: inline-block;
+}
+
+h3 {
+font-size: 1.15rem;
+font-weight: 600;
+margin-bottom: 6px;
+}
+
+/* DIVIDER */
+.divider {
+display: flex;
+align-items: center;
+gap: 12px;
+margin: 24px 0;
+}
+.divider::before, .divider::after {
+content: ‘’;
+flex: 1;
+height: 1px;
+background: linear-gradient(90deg, transparent, var(–gold-dark), transparent);
+}
+.divider-icon {
+font-size: 1.2rem;
+color: var(–gold-dark);
+}
+
+/* SCREENS */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* SETUP SCREEN */
+.setup-panel {
+max-width: 560px;
+margin: 0 auto;
+background: rgba(255,255,255,0.25);
+border: 1px solid var(–gold);
+border-radius: 4px;
+padding: 28px;
+}
+
+.setup-panel label {
+font-family: ‘Cinzel’, serif;
+font-weight: 600;
+font-size: 0.95rem;
+display: block;
+margin-bottom: 6px;
+color: var(–ink-light);
+}
+
+.group-config {
+display: flex;
+align-items: center;
+gap: 12px;
+margin-bottom: 20px;
+}
+
+.group-config input[type=“number”] {
+width: 70px;
+padding: 8px 12px;
+font-family: ‘Cinzel’, serif;
+font-size: 1.1rem;
+font-weight: 700;
+text-align: center;
+border: 2px solid var(–gold-dark);
+border-radius: 3px;
+background: var(–parchment);
+color: var(–ink);
+}
+
+.group-names-list {
+margin-bottom: 20px;
+}
+
+.group-name-row {
+display: flex;
+align-items: center;
+gap: 10px;
+margin-bottom: 8px;
+}
+
+.group-name-row span {
+font-family: ‘Cinzel’, serif;
+font-weight: 600;
+font-size: 0.85rem;
+min-width: 70px;
+color: var(–ink-light);
+}
+
+.group-name-row input {
+flex: 1;
+padding: 6px 10px;
+font-family: ‘Crimson Text’, serif;
+font-size: 1rem;
+border: 1px solid var(–gold);
+border-radius: 3px;
+background: rgba(255,255,255,0.5);
+color: var(–ink);
+}
+
+/* BUTTONS */
+.btn {
+font-family: ‘Cinzel’, serif;
+font-weight: 700;
+font-size: 0.95rem;
+letter-spacing: 0.05em;
+padding: 10px 28px;
+border: 2px solid var(–gold-dark);
+border-radius: 3px;
+cursor: pointer;
+transition: all 0.2s;
+text-transform: uppercase;
+}
+
+.btn-primary {
+background: linear-gradient(180deg, var(–gold-bright), var(–gold-dark));
+color: #fff;
+text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+.btn-primary:hover {
+background: linear-gradient(180deg, #f0d55a, var(–gold));
+transform: translateY(-1px);
+box-shadow: 0 3px 8px var(–shadow);
+}
+
+.btn-secondary {
+background: var(–parchment);
+color: var(–ink);
+}
+.btn-secondary:hover {
+background: var(–parchment-dark);
+}
+
+.btn-danger {
+background: var(–red-wax);
+color: #fff;
+border-color: var(–red-wax);
+}
+.btn-danger:hover {
+background: var(–red-wax-light);
+}
+
+.btn-sm {
+padding: 6px 16px;
+font-size: 0.8rem;
+}
+
+.btn-row {
+display: flex;
+gap: 12px;
+justify-content: center;
+flex-wrap: wrap;
+margin-top: 20px;
+}
+
+/* SCENARIO HEADER */
+.scenario-header {
+text-align: center;
+margin-bottom: 20px;
+}
+
+.scenario-header h2 {
+display: block;
+border-bottom: none;
+padding-bottom: 0;
+font-size: 1.8rem;
+color: var(–red-wax);
+}
+
+.scenario-era {
+font-family: ‘Cinzel’, serif;
+font-size: 0.95rem;
+color: var(–gold-dark);
+letter-spacing: 0.1em;
+}
+
+/* COMPANY CARDS */
+.company-cards {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+gap: 16px;
+margin-bottom: 24px;
+}
+
+.company-card {
+background: rgba(255,255,255,0.3);
+border: 2px solid var(–gold);
+border-radius: 4px;
+padding: 18px;
+position: relative;
+transition: box-shadow 0.2s;
+}
+.company-card:hover {
+box-shadow: 0 2px 12px var(–shadow);
+}
+
+.company-card.vault-card {
+border-style: dashed;
+background: rgba(90,90,90,0.06);
+}
+
+.card-ticker {
+position: absolute;
+top: 12px;
+right: 14px;
+font-family: ‘Cinzel’, serif;
+font-weight: 900;
+font-size: 0.85rem;
+letter-spacing: 0.1em;
+padding: 2px 8px;
+border-radius: 3px;
+}
+
+.ticker-srcc { background: var(–silk-purple); color: #fff; }
+.ticker-iosi { background: var(–ocean-blue); color: #fff; }
+.ticker-shdv { background: var(–desert-tan); color: var(–ink); }
+.ticker-medi { background: var(–med-teal); color: #fff; }
+.ticker-vault { background: var(–vault-gray); color: #fff; }
+
+.card-company-name {
+font-family: ‘Cinzel’, serif;
+font-weight: 700;
+font-size: 1.05rem;
+color: var(–ink);
+margin-bottom: 8px;
+padding-right: 60px;
+}
+
+.card-analysis {
+font-size: 0.95rem;
+line-height: 1.5;
+color: var(–ink-light);
+font-style: italic;
+}
+
+/* ALLOCATION TABLE */
+.allocation-section {
+margin-bottom: 24px;
+}
+
+.alloc-table-wrap {
+overflow-x: auto;
+-webkit-overflow-scrolling: touch;
+}
+
+table.alloc-table {
+width: 100%;
+border-collapse: collapse;
+font-size: 0.95rem;
+}
+
+table.alloc-table th {
+font-family: ‘Cinzel’, serif;
+font-weight: 700;
+font-size: 0.8rem;
+letter-spacing: 0.05em;
+text-transform: uppercase;
+padding: 8px 6px;
+background: var(–ink);
+color: var(–parchment);
+text-align: center;
+white-space: nowrap;
+}
+
+table.alloc-table th:first-child {
+text-align: left;
+padding-left: 12px;
+}
+
+table.alloc-table td {
+padding: 6px;
+text-align: center;
+border-bottom: 1px solid rgba(197,160,53,0.3);
+}
+
+table.alloc-table td:first-child {
+text-align: left;
+padding-left: 12px;
+font-family: ‘Cinzel’, serif;
+font-weight: 600;
+font-size: 0.9rem;
+white-space: nowrap;
+}
+
+table.alloc-table tr:nth-child(even) {
+background: rgba(255,255,255,0.2);
+}
+
+table.alloc-table input[type=“number”] {
+width: 58px;
+padding: 5px 4px;
+font-family: ‘Crimson Text’, serif;
+font-size: 0.95rem;
+text-align: center;
+border: 1px solid var(–gold);
+border-radius: 3px;
+background: rgba(255,255,255,0.6);
+color: var(–ink);
+}
+
+table.alloc-table input[type=“number”]:focus {
+outline: none;
+border-color: var(–red-wax);
+box-shadow: 0 0 0 2px rgba(139,37,0,0.15);
+}
+
+.total-cell {
+font-weight: 700;
+font-family: ‘Cinzel’, serif;
+}
+
+.total-valid { color: #2a7a2a; }
+.total-invalid { color: var(–red-wax); }
+
+/* RESULTS PHASE */
+.round-reveal {
+text-align: center;
+margin: 20px 0;
+}
+
+.round-number {
+font-family: ‘Cinzel’, serif;
+font-size: 1.3rem;
+font-weight: 700;
+color: var(–red-wax);
+margin-bottom: 8px;
+}
+
+.multipliers-display {
+display: flex;
+justify-content: center;
+gap: 14px;
+flex-wrap: wrap;
+margin-bottom: 16px;
+}
+
+.mult-chip {
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 2px;
+padding: 8px 14px;
+border-radius: 4px;
+border: 2px solid;
+min-width: 70px;
+}
+
+.mult-chip-ticker {
+font-family: ‘Cinzel’, serif;
+font-weight: 700;
+font-size: 0.7rem;
+letter-spacing: 0.08em;
+}
+
+.mult-chip-value {
+font-family: ‘Cinzel’, serif;
+font-weight: 900;
+font-size: 1.3rem;
+}
+
+.mult-positive { border-color: #2a7a2a; background: rgba(42,122,42,0.08); color: #2a7a2a; }
+.mult-negative { border-color: var(–red-wax); background: rgba(139,37,0,0.08); color: var(–red-wax); }
+.mult-neutral { border-color: var(–vault-gray); background: rgba(90,90,90,0.06); color: var(–vault-gray); }
+
+/* SCOREBOARD */
+table.score-table {
+width: 100%;
+border-collapse: collapse;
+font-size: 0.95rem;
+}
+
+table.score-table th {
+font-family: ‘Cinzel’, serif;
+font-weight: 700;
+font-size: 0.8rem;
+letter-spacing: 0.05em;
+text-transform: uppercase;
+padding: 10px 8px;
+background: var(–ink);
+color: var(–parchment);
+text-align: center;
+}
+
+table.score-table th:first-child { text-align: left; padding-left: 12px; }
+
+table.score-table td {
+padding: 8px;
+text-align: center;
+border-bottom: 1px solid rgba(197,160,53,0.3);
+font-variant-numeric: tabular-nums;
+}
+
+table.score-table td:first-child {
+text-align: left;
+padding-left: 12px;
+font-family: ‘Cinzel’, serif;
+font-weight: 600;
+}
+
+table.score-table tr:nth-child(even) { background: rgba(255,255,255,0.2); }
+table.score-table tr.rank-1 { background: rgba(197,160,53,0.15); }
+table.score-table .money-up { color: #2a7a2a; font-weight: 700; }
+table.score-table .money-down { color: var(–red-wax); font-weight: 700; }
+table.score-table .money-same { color: var(–vault-gray); }
+
+/* NAV */
+.nav-bar {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 10px 0;
+border-top: 1px solid var(–gold);
+margin-top: 20px;
+}
+
+.nav-breadcrumb {
+font-family: ‘Cinzel’, serif;
+font-size: 0.8rem;
+color: var(–gold-dark);
+letter-spacing: 0.05em;
+}
+
+/* TEACHER CONTROLS */
+.teacher-bar {
+display: flex;
+gap: 8px;
+flex-wrap: wrap;
+justify-content: center;
+margin: 12px 0;
+}
+
+/* PHASE INDICATORS */
+.phase-indicator {
+text-align: center;
+font-family: ‘Cinzel’, serif;
+font-size: 0.85rem;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+color: var(–gold-dark);
+margin-bottom: 16px;
+padding: 6px;
+border: 1px dashed var(–gold);
+border-radius: 3px;
+background: rgba(197,160,53,0.05);
+}
+
+/* EVENT NARRATIVE */
+.event-narrative {
+background: rgba(139,37,0,0.04);
+border-left: 4px solid var(–red-wax);
+padding: 14px 18px;
+margin: 16px 0;
+font-size: 1rem;
+line-height: 1.6;
+color: var(–ink);
+font-style: italic;
+}
+
+.event-narrative strong {
+font-style: normal;
+color: var(–red-wax);
+}
+
+/* FINAL SCOREBOARD */
+.final-podium {
+display: flex;
+justify-content: center;
+gap: 20px;
+margin: 20px 0;
+flex-wrap: wrap;
+}
+
+.podium-place {
+text-align: center;
+padding: 16px 24px;
+border: 3px solid var(–gold);
+border-radius: 6px;
+min-width: 140px;
+}
+
+.podium-place.first {
+background: linear-gradient(180deg, rgba(232,200,74,0.2), rgba(197,160,53,0.1));
+border-color: var(–gold-bright);
+transform: scale(1.05);
+}
+
+.podium-rank {
+font-family: ‘Cinzel’, serif;
+font-size: 2rem;
+font-weight: 900;
+color: var(–gold-dark);
+}
+
+.podium-name {
+font-family: ‘Cinzel’, serif;
+font-weight: 700;
+font-size: 1rem;
+color: var(–ink);
+margin: 4px 0;
+}
+
+.podium-amount {
+font-family: ‘Crimson Text’, serif;
+font-size: 1.1rem;
+font-weight: 700;
+color: var(–red-wax);
+}
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+h1 { font-size: 1.6rem; }
+.company-cards { grid-template-columns: 1fr; }
+.mult-chip { min-width: 60px; padding: 6px 10px; }
+}
+
+/* ANIMATED ROUND REVEAL */
+.reveal-sequence {
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 0;
+margin: 12px 0 20px;
+}
+
+.reveal-step {
+display: flex;
+align-items: center;
+gap: 14px;
+padding: 12px 20px;
+border-radius: 6px;
+opacity: 0;
+transform: translateY(12px);
+transition: opacity 0.5s ease, transform 0.5s ease;
+width: 100%;
+max-width: 560px;
+border-bottom: 1px solid rgba(197,160,53,0.2);
+}
+
+.reveal-step.visible {
+opacity: 1;
+transform: translateY(0);
+}
+
+.reveal-step .mult-chip {
+flex-shrink: 0;
+}
+
+.reveal-flavor {
+font-family: ‘Crimson Text’, serif;
+font-size: 1.05rem;
+font-style: italic;
+line-height: 1.4;
+color: var(–ink-light);
+flex: 1;
+}
+
+.reveal-step.step-positive { background: rgba(42,122,42,0.05); }
+.reveal-step.step-negative { background: rgba(139,37,0,0.05); }
+.reveal-step.step-neutral  { background: rgba(90,90,90,0.03); }
+
+.reveal-step .reveal-flavor strong {
+font-style: normal;
+}
+
+@keyframes pulse-gold {
+0%,100% { box-shadow: 0 0 0 0 rgba(197,160,53,0); }
+50% { box-shadow: 0 0 12px 4px rgba(197,160,53,0.3); }
+}
+
+.reveal-step.just-revealed {
+animation: pulse-gold 0.8s ease;
+}
+
+.round-scoreboard-update {
+margin-top: 12px;
+padding: 10px 16px;
+background: rgba(44,24,16,0.04);
+border-radius: 4px;
+font-family: ‘Cinzel’, serif;
+font-size: 0.85rem;
+color: var(–ink-light);
+text-align: center;
+opacity: 0;
+transition: opacity 0.5s ease;
+}
+.round-scoreboard-update.visible { opacity: 1; }
+</style>
+
+</head>
+<body class="parchment-bg">
+<div class="page-border">
+
+<!-- ======== SETUP SCREEN ======== -->
+
+<div id="setup-screen" class="screen active">
+  <h1>Trade Routes</h1>
+  <div class="subtitle">A Medieval Investment Simulation</div>
+
+  <div class="divider"><span class="divider-icon">&#9830;</span></div>
+
+  <div class="setup-panel">
+    <label for="group-count">Number of Trading Groups</label>
+    <div class="group-config">
+      <input type="number" id="group-count" min="2" max="12" value="6">
+      <button class="btn btn-secondary btn-sm" onclick="updateGroupNames()">Update</button>
+    </div>
+
+```
+<label>Group Names <span style="font-weight:400;font-family:'Crimson Text';font-size:0.9rem;">(customize or keep defaults)</span></label>
+<div id="group-names-list" class="group-names-list"></div>
+
+<div class="btn-row">
+  <button class="btn btn-primary" onclick="startGame()">Begin the Venture</button>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- ======== GAME SCREEN ======== -->
+
+<div id="game-screen" class="screen">
+  <h1>Trade Routes</h1>
+  <div id="game-breadcrumb" class="subtitle"></div>
+
+  <div id="phase-indicator" class="phase-indicator"></div>
+
+  <!-- Scenario narrative / cards -->
+
+  <div id="scenario-header" class="scenario-header"></div>
+  <div id="company-cards" class="company-cards"></div>
+
+  <!-- Event narrative for round reveals -->
+
+  <div id="event-narrative" class="event-narrative" style="display:none;"></div>
+
+  <!-- Round reveal -->
+
+  <div id="round-reveal" class="round-reveal" style="display:none;"></div>
+
+  <!-- Allocation table -->
+
+  <div id="allocation-section" class="allocation-section" style="display:none;">
+    <h3>Allocate Your Funds — remainder goes to the Vault automatically</h3>
+    <div class="alloc-table-wrap">
+      <table id="alloc-table" class="alloc-table"></table>
+    </div>
+  </div>
+
+  <!-- Scoreboard -->
+
+  <div id="scoreboard-section" style="display:none;">
+    <h2>Ledger</h2>
+    <div class="alloc-table-wrap">
+      <table id="score-table" class="score-table"></table>
+    </div>
+  </div>
+
+  <!-- Teacher controls -->
+
+  <div class="teacher-bar" id="teacher-bar"></div>
+</div>
+
+<!-- ======== FINAL SCREEN ======== -->
+
+<div id="final-screen" class="screen">
+  <h1>Trade Routes</h1>
+  <div class="subtitle">Final Accounting</div>
+  <div class="divider"><span class="divider-icon">&#9830;</span></div>
+  <div id="final-content"></div>
+  <div class="btn-row" style="margin-top:30px;">
+    <button class="btn btn-primary" onclick="resetGame()">New Game</button>
+  </div>
+</div>
+
+</div><!-- /page-border -->
+
+<script>
+// ============================================================
+//  GAME DATA — Historically adjusted scenarios
+// ============================================================
+const STARTING_FUNDS = 10000;
+
+const COMPANIES = [
+  { id: 'srcc', ticker: 'SRCC', name: 'Silk Road Caravan Company' },
+  { id: 'iosi', ticker: 'IOSI', name: 'Indian Ocean Shipping Inc.' },
+  { id: 'shdv', ticker: 'SHDV', name: 'Sahara Desert Ventures' },
+  { id: 'medi', ticker: 'MEDI', name: 'Mediterranean Sea Partners' },
+  { id: 'vault', ticker: 'VAULT', name: 'The Vault' }
+];
+
+const SCENARIOS = [
+  {
+    title: 'Scenario 1 — The Golden Age',
+    era: 'c. 750–900 CE · Tang Dynasty & Abbasid Caliphate',
+    analyses: {
+      srcc: `The Silk Road is thriving. The Tang Dynasty controls the eastern routes with well-maintained roads and fair taxation, while the Abbasid Caliphate has secured the western half. The Abbasids charge a tax called the jizya on non-Muslim merchants, but many Sogdian traders have converted to Islam, reducing their costs. With both empires stable and prosperous, overland trade between China and the Mediterranean is as safe and profitable as it has been in centuries. A strong investment with real growth potential.`,
+      iosi: `Indian Ocean trade is growing but remains unpredictable. Arab and Persian merchants sail dhows between East Africa, India, and Southeast Asia using monsoon winds, but navigation is still imprecise. A successful voyage can bring enormous returns in spices, ivory, and gold — but storms, miscalculated winds, and unfamiliar coastlines mean some ships never return. This trade has real potential, but investors should expect volatility.`,
+      shdv: `Crossing the Sahara remains extraordinarily dangerous. Without reliable caravan infrastructure, traders attempting the journey face extreme heat, limited water sources, and near-certain loss of goods. A few Berber traders have made it across with small quantities of gold and salt, proving the route is not impossible — but most expeditions end in disaster. Only the boldest (or most foolish) investors should consider this.`,
+      medi: `The Mediterranean was once Rome's great trade highway, but those days are gone. Viking longships raid from the north, Islamic corsairs patrol from the south, and there is no single power strong enough to keep sea lanes safe. Merchants must hire their own protection, cutting deeply into profits. Some money can still be made in coastal trade between Byzantine ports and Italian towns, but the risks are considerable and returns are inconsistent.`,
+      vault: `The Vault is always safe. You won't make money, but you won't lose it either.`
+    },
+    // Rounds represent unfolding events within the era
+    rounds: [
+      // R1: Trade routes open, early Tang stability
+      { srcc: 1.20, iosi: 0.80, shdv: 0.10, medi: 1.05, vault: 1 },
+      // R2: Abbasid golden age peaks, Indian Ocean monsoon season good
+      { srcc: 1.35, iosi: 1.15, shdv: 0.15, medi: 0.90, vault: 1 },
+      // R3: An Lushan Rebellion disrupts Tang trade temporarily
+      { srcc: 0.85, iosi: 1.10, shdv: 0.80, medi: 1.10, vault: 1 },
+      // R4: Recovery and expansion, lucky Saharan crossing
+      { srcc: 1.30, iosi: 1.40, shdv: 1.20, medi: 1.05, vault: 1 },
+      // R5: Viking raids intensify in Med, silk road stabilizes
+      { srcc: 1.25, iosi: 0.75, shdv: 0.10, medi: 0.60, vault: 1 },
+      // R6: End of era consolidation
+      { srcc: 1.15, iosi: 1.20, shdv: 0.20, medi: 1.10, vault: 1 }
+    ],
+    roundEvents: [
+      `<strong>Tang Prosperity:</strong> The Tang Dynasty maintains secure roads through Central Asia. Caravans move freely and merchants report healthy profits on silk and porcelain shipments.`,
+      `<strong>Abbasid Golden Age:</strong> Baghdad becomes the richest city in the world. Scholars, merchants, and artisans flock to Abbasid cities. Indian Ocean merchants benefit from growing demand for spices and incense.`,
+      `<strong>An Lushan Rebellion:</strong> Civil war erupts in Tang China, disrupting the eastern Silk Road. Trade caravans are rerouted or delayed. Meanwhile, Mediterranean coastal trade holds steady.`,
+      `<strong>Recovery & Expansion:</strong> The Tang reasserts control and trade surges. A Berber caravan successfully crosses the Sahara with a load of gold, sparking interest in the route. Indian Ocean sailors report an excellent monsoon season.`,
+      `<strong>Viking Raids Intensify:</strong> Norse raiders strike deep into the Mediterranean, sacking coastal towns. Shipping insurance costs soar. Meanwhile, the Silk Road remains stable under dual-empire protection.`,
+      `<strong>Era Consolidation:</strong> Trade patterns settle. The Silk Road and Indian Ocean routes prove their long-term value, while the Sahara remains a gamble and the Mediterranean slowly recovers.`
+    ],
+    roundFlavors: [
+      { srcc: "Good prices on silk! Tang roads are safe and busy.", iosi: "A fleet miscalculates the monsoon winds — several ships lost at sea.", shdv: "An entire caravan perishes in the deep desert. Almost total loss.", medi: "Steady coastal trade between Byzantine ports turns a small profit.", vault: "Your gold sits safely in the vault." },
+      { srcc: "Silk and porcelain fly off the shelves in Baghdad! Huge demand.", iosi: "Arab dhows ride favorable monsoons — good returns on spices and ivory.", shdv: "Another expedition vanishes into the sands. Grim news for investors.", medi: "Corsairs raid a major shipping lane. Merchants take losses.", vault: "Your gold sits safely in the vault." },
+      { srcc: "Civil war in China! The An Lushan Rebellion chokes off eastern trade.", iosi: "Steady voyages along established routes. Modest but reliable returns.", shdv: "A small Berber party makes it across with salt — not much, but they survived!", medi: "With Silk Road disrupted, some goods reroute through Mediterranean ports. Decent profits.", vault: "Your gold sits safely in the vault." },
+      { srcc: "Tang armies restore order! Pent-up demand sends silk prices soaring.", iosi: "Perfect monsoon season! Ships loaded with spices return safely. Excellent profits!", shdv: "A lucky caravan finds good wells and crosses with gold. Investors celebrate!", medi: "Steady but unspectacular trade along the Italian coast.", vault: "Your gold sits safely in the vault." },
+      { srcc: "The Silk Road hums along. Stable empires mean reliable returns.", iosi: "A freak storm season batters the Indian Ocean fleet. Heavy losses.", shdv: "Bandits ambush a caravan at an oasis. Nearly everything lost.", medi: "Vikings sack Mediterranean ports! Merchants flee. Devastating losses.", vault: "Your gold sits safely in the vault." },
+      { srcc: "End of era — Silk Road merchants report solid, steady profits.", iosi: "New sailing routes discovered! Indian Ocean returns improve.", shdv: "One small caravan limps across — minimal goods survived. Tiny returns.", medi: "Mediterranean slowly recovers. Some merchants find protected harbors.", vault: "Your gold sits safely in the vault." }
+    ]
+  },
+  {
+    title: 'Scenario 2 — New Technologies',
+    era: 'c. 900–1100 CE · Song Dynasty & Expanding Horizons',
+    analyses: {
+      srcc: `The Silk Road continues to be a solid investment. The Song Dynasty has built an extensive system of roads and canals that makes moving goods across China far more efficient. Chinese innovations in porcelain, paper, and gunpowder are in high demand. The Abbasid Caliphate, though showing some signs of political fragmentation, still maintains safe passage through Persia and Mesopotamia. The outlook remains positive.`,
+      iosi: `What seemed like a wild risk a century ago now looks increasingly viable. New technologies — the magnetic compass, improved astrolabes, and the lateen sail — have transformed Indian Ocean navigation. Sailors can now plot courses with greater confidence, and the triangular lateen sail allows ships to tack against the wind. It's still a long and dangerous voyage, but the odds of a profitable return have improved dramatically.`,
+      shdv: `The introduction of the Arabian camel to North Africa is slowly transforming Saharan trade. Small caravans are beginning to make semi-regular crossings, trading salt from the north for gold from West African mines near the Senegal River. The route is still extremely dangerous — sandstorms, dehydration, and bandits claim many expeditions — but successful crossings now bring genuine profits. A high-risk, potentially high-reward investment.`,
+      medi: `Mediterranean trade is evolving. While piracy and political instability remain concerns, new trading communities are emerging in Italian port cities. Feudal manors produce limited surplus goods, but trade in raw materials, timber, and enslaved peoples from Eastern Europe is expanding. Contact with Muslim merchants brings access to luxury goods from the East. There is growing opportunity here, but the risks have not disappeared.`,
+      vault: `The Vault is always safe. You won't make money, but you won't lose it either.`
+    },
+    rounds: [
+      // R1: Song innovation boom
+      { srcc: 1.20, iosi: 1.30, shdv: 0.50, medi: 1.10, vault: 1 },
+      // R2: Good monsoon, Saharan caravans struggle
+      { srcc: 1.15, iosi: 1.25, shdv: 0.30, medi: 0.90, vault: 1 },
+      // R3: Stable period, Sahara makes a crossing
+      { srcc: 1.10, iosi: 1.10, shdv: 1.40, medi: 1.15, vault: 1 },
+      // R4: Silk prices surge, Indian Ocean storm season
+      { srcc: 1.40, iosi: 0.70, shdv: 1.10, medi: 1.20, vault: 1 },
+      // R5: Abbasid fragmentation begins
+      { srcc: 0.85, iosi: 1.15, shdv: 0.40, medi: 0.80, vault: 1 },
+      // R6: Era closes strong for ocean trade
+      { srcc: 1.10, iosi: 1.35, shdv: 0.60, medi: 1.15, vault: 1 }
+    ],
+    roundEvents: [
+      `<strong>Song Innovation Boom:</strong> Chinese advances in shipbuilding and navigation spread across trade networks. The compass makes Indian Ocean voyages far more reliable. Silk Road merchants benefit from new Chinese exports.`,
+      `<strong>Favorable Monsoons:</strong> Indian Ocean merchants enjoy excellent sailing conditions. However, a major Saharan caravan is lost to a sandstorm, and Mediterranean shipping faces seasonal piracy.`,
+      `<strong>Gold Crosses the Desert:</strong> A large Berber caravan successfully delivers West African gold to North African markets, doubling investor returns. News of the profits attracts more interest in the route.`,
+      `<strong>Silk Prices Surge:</strong> European demand for Chinese silk reaches new heights, enriching Silk Road merchants. But a devastating typhoon season in the Indian Ocean sinks several major trading fleets.`,
+      `<strong>Abbasid Fragmentation:</strong> Political instability in the Abbasid heartland disrupts western Silk Road segments. Breakaway dynasties impose competing taxes and tolls on overland merchants.`,
+      `<strong>Ocean Trade Ascendant:</strong> As overland routes face uncertainty, Indian Ocean shipping picks up the slack. New port cities in Southeast Asia provide fresh trading opportunities and safer harbors.`
+    ],
+    roundFlavors: [
+      { srcc: "Song porcelain and paper are hot commodities! Caravans loaded with profits.", iosi: "The compass changes everything! Navigators plot precise courses. Big returns.", shdv: "A sandstorm swallows half the caravan. Major losses on the desert route.", medi: "Italian merchants expand into new ports. Modest growth.", vault: "Your gold sits safely in the vault." },
+      { srcc: "Steady demand for Chinese goods keeps Silk Road merchants happy.", iosi: "Lateen sails let ships tack upwind — faster voyages, better margins!", shdv: "Another caravan lost to dehydration. The desert shows no mercy.", medi: "Corsairs intercept a Genoese convoy. Investors take a hit.", vault: "Your gold sits safely in the vault." },
+      { srcc: "Reliable returns as Song canals speed goods to the coast.", iosi: "Improved astrolabes help sailors — consistent, if modest, profits.", shdv: "A massive caravan of 200 camels crosses with West African gold! Huge payday!", medi: "Muslim and Christian merchants trade peacefully in Sicilian ports. Good returns.", vault: "Your gold sits safely in the vault." },
+      { srcc: "European appetite for silk grows insatiable! Prices at record highs.", iosi: "Typhoon season devastates the fleet. Ships and cargo lost. Painful year.", shdv: "Small caravans make semi-regular crossings now. Modest but real returns.", medi: "Venetian trade networks expand. Mediterranean commerce is growing.", vault: "Your gold sits safely in the vault." },
+      { srcc: "Abbasid breakup means competing taxes on the western route. Profits squeezed.", iosi: "Despite political changes, the sea routes remain open and profitable.", shdv: "Berber raiders attack a caravan near the oases. Heavy losses.", medi: "Feudal wars disrupt overland trade in Europe. Shipping suffers too.", vault: "Your gold sits safely in the vault." },
+      { srcc: "Song innovations keep eastern trade humming. Solid returns.", iosi: "New Southeast Asian ports welcome traders! Indian Ocean booms.", shdv: "A difficult crossing — most goods lost, but some gold makes it through.", medi: "Italian city-states compete for trade. Rising tide lifts most ships.", vault: "Your gold sits safely in the vault." }
+    ]
+  },
+  {
+    title: 'Scenario 3 — Upheaval & Opportunity',
+    era: 'c. 1100–1250 CE · Crusades, Mongol Conquests & Swahili Coast',
+    analyses: {
+      srcc: `Chaos has engulfed the Silk Road. The Abbasid Caliphate is fracturing into competing states, and the Song Dynasty is under pressure from northern invaders. Most alarming, a nomadic confederation called the Mongols has formed an unstoppable military force under Genghis Khan. Mongol armies are destroying major trading cities — Samarkand, Bukhara, and Baghdad have all fallen. Some merchants continue to profit in the chaos, buying goods cheaply from desperate sellers, but the future of overland trade is deeply uncertain.`,
+      iosi: `The Indian Ocean has become the safest major trade route in the world. Specialized dhows ride predictable monsoon winds between East Asia, India, and Africa on reliable schedules. A new Swahili-speaking civilization has emerged along the East African coast, with thriving port cities like Kilwa, Mombasa, and Zanzibar. Trading cities have also developed across India and Southeast Asia, creating a vast commercial network. Shipping always carries risk, but this trade is as close to a sure thing as medieval commerce gets.`,
+      shdv: `The trans-Saharan trade has truly come into its own. Camel caravans now cross the desert in large, organized groups, trading salt from Saharan mines for gold from the wealthy kingdoms south of the desert. Cities like Timbuktu and Djenné have become major commercial centers. The kingdom of Ghana (and its successors) carefully regulates the gold trade to maintain high prices. The journey is still grueling and dangerous, but successful crossings now yield enormous profits.`,
+      medi: `Mediterranean trade is booming. Italian city-states like Venice and Genoa have built powerful merchant fleets. The Crusades, while devastating, have opened European eyes to the luxury goods of the East — spices, silk, sugar, and dyes command extraordinary prices in European markets. Pilgrims traveling to Jerusalem provide steady business, and Crusader states have established new trading posts along the Levantine coast. Returns are becoming more consistent, though piracy and warfare remain risks.`,
+      vault: `The Vault is always safe. You won't make money, but you won't lose it either.`
+    },
+    rounds: [
+      // R1: Crusades boost Med, Indian Ocean stable, Mongols threaten Silk Road
+      { srcc: 0.70, iosi: 1.40, shdv: 1.80, medi: 1.20, vault: 1 },
+      // R2: Saharan gold rush, Silk Road merchants adapt
+      { srcc: 1.05, iosi: 1.25, shdv: 1.50, medi: 1.15, vault: 1 },
+      // R3: Mongols sack major cities — Silk Road collapses
+      { srcc: 0.50, iosi: 1.30, shdv: 0.70, medi: 1.10, vault: 1 },
+      // R4: Recovery trade, Swahili coast golden age
+      { srcc: 0.90, iosi: 1.50, shdv: 1.60, medi: 1.05, vault: 1 },
+      // R5: Crusader state falls, Med disruption
+      { srcc: 0.60, iosi: 1.15, shdv: 1.30, medi: 0.75, vault: 1 },
+      // R6: Era settles — ocean and desert ascendant
+      { srcc: 0.80, iosi: 1.20, shdv: 1.40, medi: 1.15, vault: 1 }
+    ],
+    roundEvents: [
+      `<strong>Crusades Open Eastern Markets:</strong> European Crusaders establish trading posts in the Levant. Venetian and Genoese merchants gain direct access to Asian goods. Meanwhile, Mongol armies begin their devastating westward expansion, threatening Silk Road cities.`,
+      `<strong>Saharan Gold Rush:</strong> West African gold floods North African markets as organized camel caravans establish regular routes. Silk Road merchants find creative ways to trade around Mongol disruptions, keeping some profit flowing.`,
+      `<strong>The Mongol Storm:</strong> Genghis Khan's armies sack Samarkand and Bukhara, two of the Silk Road's greatest trading cities. Thousands of merchants are killed or displaced. Overland trade grinds nearly to a halt. Indian Ocean routes absorb displaced trade.`,
+      `<strong>Swahili Coast Golden Age:</strong> Kilwa, Mombasa, and other Swahili port cities reach their commercial peak, trading gold, ivory, and enslaved peoples for Chinese porcelain, Indian textiles, and Persian ceramics. Trans-Saharan gold continues to flow.`,
+      `<strong>Crusader States Under Pressure:</strong> Muslim forces recapture key Crusader positions, disrupting Mediterranean trade routes to the Levant. Shipping costs spike as merchants reroute through safer but longer passages.`,
+      `<strong>New Equilibrium:</strong> Ocean-based and desert trade routes emerge as the dominant networks. The Silk Road remains depressed under continued Mongol military campaigns, but some merchants whisper that Mongol rule may eventually bring stability.`
+    ],
+    roundFlavors: [
+      { srcc: "Mongol armies approach! Merchants flee Silk Road cities. Values plummet.", iosi: "Swahili ports buzzing with business! Dhows return loaded with ivory and gold.", shdv: "The gold-salt trade is booming! Organized caravans cross with huge profits.", medi: "Crusaders open new trading posts in the Holy Land. Spice prices soar in Europe!", vault: "Your gold sits safely in the vault." },
+      { srcc: "Some clever merchants buy goods cheaply from panicked sellers. Small gains.", iosi: "Kilwa becomes the richest port in East Africa. Steady, strong returns.", shdv: "Another caravan of gold crosses safely! Desert trade is thriving.", medi: "Venetian merchants dominate the eastern Mediterranean. Good year.", vault: "Your gold sits safely in the vault." },
+      { srcc: "Genghis Khan sacks Samarkand and Bukhara! The Silk Road collapses.", iosi: "Displaced Silk Road trade flows to ocean routes. Indian Ocean merchants profit!", shdv: "A drought dries up desert wells. Caravans reroute, losing time and goods.", medi: "Mediterranean trade steady. Pilgrims to Jerusalem keep money flowing.", vault: "Your gold sits safely in the vault." },
+      { srcc: "Some trade trickles through around Mongol-controlled areas. Slim pickings.", iosi: "Chinese junks join the Indian Ocean trade! Massive ships, massive profits.", shdv: "Timbuktu booms as a trade hub! Gold and salt flow in both directions.", medi: "Crusader trade posts generate steady income. Modest returns.", vault: "Your gold sits safely in the vault." },
+      { srcc: "Baghdad falls to the Mongols. The old Silk Road is in ruins.", iosi: "A quieter season on the ocean, but still profitable. Reliable returns.", shdv: "Ghana's successors keep gold prices high through careful regulation. Great returns!", medi: "Muslim forces retake key ports! Crusader trade disrupted. Heavy losses.", vault: "Your gold sits safely in the vault." },
+      { srcc: "Silk Road merchants cling on in border regions. Meager returns.", iosi: "Indian Ocean trade solidifies as the world's premier route. Strong close to the era.", shdv: "Desert trade is now a proven enterprise! Caravans cross with growing confidence.", medi: "Despite setbacks, Italian fleets adapt and find new routes. Decent recovery.", vault: "Your gold sits safely in the vault." }
+    ]
+  },
+  {
+    title: 'Scenario 4 — Pax Mongolica',
+    era: 'c. 1250–1350 CE · Mongol Peace, Mali Empire & Italian City-States',
+    analyses: {
+      srcc: `Against all expectations, the Mongols have become great for business. Having conquered the largest contiguous land empire in history, the Mongol khans have established the "Pax Mongolica" — a system of protected trade routes, standardized weights and measures, and diplomatic passports called paiza that guarantee safe passage. All religions are tolerated, so no merchant faces discriminatory taxes. A single merchant can now travel from Beijing to the Black Sea under one political authority. The Silk Road has never been safer or more profitable.`,
+      iosi: `Indian Ocean trade continues to be valuable and relatively safe. The absence of major naval conflicts means ships can invest fully in cargo rather than weapons. Improved shipbuilding techniques and better monsoon timing have reduced voyage times and losses. Chinese junks — massive ships with watertight compartments — are now making the journey alongside traditional dhows. Competition is increasing, which may moderate profits, but the fundamentals remain strong.`,
+      shdv: `The trans-Saharan trade is now anchored by one of the wealthiest empires on Earth — Mali. Under Mansa Musa, Mali controls the gold mines of Bambuk and Bure, and the empire's capital at Niani rivals any city in the world for wealth. Timbuktu has become a center of both commerce and Islamic scholarship. Well-organized caravans with hundreds of camels make regular crossings. The astrolabe has improved desert navigation significantly. The risks of desert travel persist, but this is now a proven and highly profitable trade.`,
+      medi: `Italian city-states — Venice, Genoa, Florence, and Pisa — have transformed the Mediterranean into Europe's commercial engine. Powerful merchant guilds and banking families finance large trading fleets. Contact with Muslim scholars has accelerated European knowledge of navigation, mathematics, and commerce. Access to Mongol-era Silk Road goods through Black Sea ports has opened enormous opportunities. The Hanseatic League dominates northern European trade. Returns are becoming more reliable as professional merchant networks replace ad hoc trading.`,
+      vault: `The Vault is always safe. You won't make money, but you won't lose it either.`
+    },
+    rounds: [
+      // R1: Pax Mongolica opens trade
+      { srcc: 1.30, iosi: 1.15, shdv: 1.50, medi: 1.20, vault: 1 },
+      // R2: Mansa Musa's pilgrimage spreads Mali's fame
+      { srcc: 1.15, iosi: 1.25, shdv: 2.00, medi: 1.10, vault: 1 },
+      // R3: Venice-Genoa rivalry disrupts Med temporarily
+      { srcc: 1.20, iosi: 1.30, shdv: 1.20, medi: 0.80, vault: 1 },
+      // R4: Peak Pax Mongolica — all routes thrive
+      { srcc: 1.25, iosi: 1.20, shdv: 1.40, medi: 1.25, vault: 1 },
+      // R5: Early signs of Mongol decline, plague rumors
+      { srcc: 0.85, iosi: 0.90, shdv: 1.10, medi: 1.15, vault: 1 },
+      // R6: End of era — shadow of the Black Death
+      { srcc: 0.80, iosi: 1.05, shdv: 1.30, medi: 0.85, vault: 1 }
+    ],
+    roundEvents: [
+      `<strong>Pax Mongolica Opens Trade:</strong> Mongol-protected trade routes allow merchants to travel safely across the entire breadth of Asia. Marco Polo and other European merchants make the journey to China. Silk Road profits soar to historic levels.`,
+      `<strong>Mansa Musa's Pilgrimage:</strong> The Mali emperor Mansa Musa travels to Mecca with a caravan carrying tons of gold, stunning the entire Islamic world with Mali's wealth. Trans-Saharan trade investment surges as merchants rush to access West African gold.`,
+      `<strong>Venetian-Genoese War:</strong> The two great Italian maritime republics clash over control of Mediterranean trade routes. Naval battles and blockades temporarily disrupt shipping, but overland and ocean routes continue to prosper.`,
+      `<strong>Peak of the Pax Mongolica:</strong> All four major trade networks enjoy relative peace and prosperity. Goods, ideas, and technologies flow freely across the connected medieval world. This is the high-water mark of pre-modern global trade.`,
+      `<strong>Cracks Appear:</strong> The vast Mongol Empire begins to fragment into competing khanates. Overland security deteriorates in some regions. Sailors in the Indian Ocean report rumors of a terrible plague spreading through Central Asian trading posts.`,
+      `<strong>Shadow of the Plague:</strong> The Black Death begins its devastating spread along trade routes from Central Asia toward Europe. Merchants flee infected cities, and trade volumes begin to drop. The era of interconnected medieval prosperity approaches its catastrophic end.`
+    ],
+    roundFlavors: [
+      { srcc: "The Pax Mongolica! A merchant can travel from Beijing to the Black Sea in safety. Silk Road soars!", iosi: "Peaceful seas and full cargo holds. Indian Ocean merchants enjoy solid returns.", shdv: "Mansa Musa builds Timbuktu into a world-class trading city. Gold flows north!", medi: "Venetian and Genoese traders tap into Mongol-era goods at Black Sea ports. Big profits!", vault: "Your gold sits safely in the vault." },
+      { srcc: "Steady profits under Mongol protection. Standardized weights make trade easy.", iosi: "Chinese junks with watertight compartments dominate the shipping lanes. Strong returns!", shdv: "Mansa Musa's pilgrimage to Mecca stuns the world! Everyone wants in on Saharan gold.", medi: "Mediterranean trade hums along. Banking families in Florence finance big ventures.", vault: "Your gold sits safely in the vault." },
+      { srcc: "Marco Polo's stories inspire new merchants! Silk Road investment surges.", iosi: "New trade agreements with Southeast Asian kingdoms. Excellent returns!", shdv: "Well-organized caravans make routine crossings. Desert trade is steady and profitable.", medi: "Venice and Genoa go to war over trade routes! Shipping disrupted, losses mount.", vault: "Your gold sits safely in the vault." },
+      { srcc: "Peak Pax Mongolica! Goods, ideas, and technologies flow freely. Golden age for trade.", iosi: "The Indian Ocean network hits its stride. Reliable, strong returns all around.", shdv: "Mali Empire at its zenith! Gold and salt trade reaches all-time highs.", medi: "Hanseatic League expands northern trade. Mediterranean connected to Baltic markets!", vault: "Your gold sits safely in the vault." },
+      { srcc: "Mongol khanates start squabbling. Trade routes become less predictable.", iosi: "Troubling rumors from Central Asia... but ocean trade continues for now. Slight dip.", shdv: "Desert trade holds steady despite unsettling news from the East.", medi: "European merchants prosper as demand for Eastern goods keeps growing.", vault: "Your gold sits safely in the vault." },
+      { srcc: "The plague spreads along Silk Road caravans! Merchants abandon their routes.", iosi: "Ships carry goods — and disease. Sailors report sick ports. Returns dip.", shdv: "Trans-Saharan trade still strong — the desert acts as a barrier to plague.", medi: "Plague-bearing ships reach Italian ports. Trade grinds to a halt. Dark times ahead.", vault: "Your gold sits safely in the vault." }
+    ]
+  }
+];
+
+// ============================================================
+//  GAME STATE
+// ============================================================
+let state = {
+  groups: [],          // { name: string, funds: number }
+  currentScenario: 0,  // 0-3
+  currentRound: -1,    // -1 = allocation phase, 0-5 = round reveals
+  allocations: [],     // per scenario: [ { srcc:%, iosi:%, shdv:%, medi:%, vault:% } per group ]
+  history: [],         // per scenario: [ [ funds after each round per group ] ]
+  phase: 'setup'       // setup | allocate | reveal | scenarioEnd | gameEnd
+};
+
+// ============================================================
+//  SETUP
+// ============================================================
+function updateGroupNames() {
+  const count = Math.max(2, Math.min(12, parseInt(document.getElementById('group-count').value) || 6));
+  document.getElementById('group-count').value = count;
+  const list = document.getElementById('group-names-list');
+  list.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    const row = document.createElement('div');
+    row.className = 'group-name-row';
+    row.innerHTML = `<span>Group ${i+1}:</span><input type="text" id="gname-${i}" value="Group ${i+1}" maxlength="20">`;
+    list.appendChild(row);
+  }
+}
+
+function startGame() {
+  const count = parseInt(document.getElementById('group-count').value) || 6;
+  state.groups = [];
+  for (let i = 0; i < count; i++) {
+    const input = document.getElementById(`gname-${i}`);
+    const name = input ? input.value.trim() || `Group ${i+1}` : `Group ${i+1}`;
+    state.groups.push({ name, funds: STARTING_FUNDS });
+  }
+  state.currentScenario = 0;
+  state.allocations = [];
+  state.history = [];
+  state.phase = 'allocate';
+  showScreen('game-screen');
+  renderScenario();
+}
+
+function resetGame() {
+  state = { groups: [], currentScenario: 0, currentRound: -1, allocations: [], history: [], phase: 'setup' };
+  showScreen('setup-screen');
+  updateGroupNames();
+}
+
+// ============================================================
+//  RENDERING
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function renderScenario() {
+  const sc = SCENARIOS[state.currentScenario];
+  state.currentRound = -1;
+  state.phase = 'allocate';
+
+  // Breadcrumb
+  document.getElementById('game-breadcrumb').textContent =
+    `Scenario ${state.currentScenario + 1} of ${SCENARIOS.length}`;
+
+  // Phase indicator
+  document.getElementById('phase-indicator').textContent = '📜 Read the Analyst Reports, then Allocate Your Funds';
+
+  // Scenario header
+  document.getElementById('scenario-header').innerHTML =
+    `<h2>${sc.title}</h2><div class="scenario-era">${sc.era}</div>`;
+
+  // Company cards
+  const cardsEl = document.getElementById('company-cards');
+  cardsEl.innerHTML = '';
+  COMPANIES.forEach(c => {
+    const analysis = sc.analyses[c.id];
+    const isVault = c.id === 'vault';
+    cardsEl.innerHTML += `
+      <div class="company-card ${isVault ? 'vault-card' : ''}">
+        <span class="card-ticker ticker-${c.id}">${c.ticker}</span>
+        <div class="card-company-name">${c.name}</div>
+        <div class="card-analysis">${analysis}</div>
+      </div>`;
+  });
+
+  // Hide round elements
+  document.getElementById('event-narrative').style.display = 'none';
+  document.getElementById('round-reveal').style.display = 'none';
+
+  // Show allocation
+  renderAllocationTable();
+  document.getElementById('allocation-section').style.display = 'block';
+
+  // Scoreboard
+  renderScoreboard();
+  document.getElementById('scoreboard-section').style.display = 'block';
+
+  // Teacher controls
+  renderTeacherBar();
+}
+
+const TRADE_COMPANIES = COMPANIES.filter(c => c.id !== 'vault');
+
+function renderAllocationTable() {
+  const table = document.getElementById('alloc-table');
+  let html = `<thead><tr>
+    <th>Group</th>
+    ${TRADE_COMPANIES.map(c => `<th>${c.ticker}</th>`).join('')}
+    <th>Vault</th>
+    <th>Total</th>
+  </tr></thead><tbody>`;
+
+  state.groups.forEach((g, gi) => {
+    html += `<tr>
+      <td>${g.name}</td>
+      ${TRADE_COMPANIES.map(c => `<td><input type="number" min="0" max="100" value="0"
+        id="alloc-${gi}-${c.id}"
+        onchange="updateTotal(${gi})" oninput="updateTotal(${gi})"></td>`).join('')}
+      <td class="vault-auto" id="vault-${gi}" style="font-weight:700;color:var(--vault-gray);">100%</td>
+      <td class="total-cell total-valid" id="total-${gi}">100%</td>
+    </tr>`;
+  });
+
+  html += '</tbody>';
+  table.innerHTML = html;
+}
+
+function updateTotal(gi) {
+  let sum = 0;
+  TRADE_COMPANIES.forEach(c => {
+    const val = Math.max(0, parseInt(document.getElementById(`alloc-${gi}-${c.id}`).value) || 0);
+    sum += val;
+  });
+  const vaultPct = Math.max(0, 100 - sum);
+  const cell = document.getElementById(`total-${gi}`);
+  const vaultCell = document.getElementById(`vault-${gi}`);
+  vaultCell.textContent = vaultPct + '%';
+  if (sum > 100) {
+    cell.textContent = sum + '%';
+    cell.className = 'total-cell total-invalid';
+    vaultCell.textContent = '—';
+    vaultCell.style.color = 'var(--red-wax)';
+  } else {
+    cell.textContent = '100%';
+    cell.className = 'total-cell total-valid';
+    vaultCell.style.color = 'var(--vault-gray)';
+  }
+}
+
+function renderScoreboard() {
+  const table = document.getElementById('score-table');
+  const roundsRevealed = state.currentRound >= 0 ? state.currentRound + 1 : 0;
+
+  let html = `<thead><tr><th>Group</th><th>Starting</th>`;
+  for (let r = 0; r < roundsRevealed; r++) {
+    html += `<th>Round ${r + 1}</th>`;
+  }
+  html += `<th>Current Funds</th></tr></thead><tbody>`;
+
+  const scenarioHistory = state.history[state.currentScenario] || [];
+
+  state.groups.forEach((g, gi) => {
+    const startFunds = g.funds;
+    html += `<tr><td>${g.name}</td><td>$${startFunds.toLocaleString('en-US', {maximumFractionDigits:0})}</td>`;
+
+    for (let r = 0; r < roundsRevealed; r++) {
+      const val = scenarioHistory[r] ? scenarioHistory[r][gi] : startFunds;
+      html += `<td>$${val.toLocaleString('en-US', {maximumFractionDigits:0})}</td>`;
+    }
+
+    const current = roundsRevealed > 0 && scenarioHistory[roundsRevealed - 1]
+      ? scenarioHistory[roundsRevealed - 1][gi] : startFunds;
+
+    const cls = current > startFunds ? 'money-up' : current < startFunds ? 'money-down' : 'money-same';
+    html += `<td class="${cls}">$${current.toLocaleString('en-US', {maximumFractionDigits:0})}</td>`;
+    html += '</tr>';
+  });
+
+  html += '</tbody>';
+  table.innerHTML = html;
+}
+
+function renderTeacherBar() {
+  const bar = document.getElementById('teacher-bar');
+
+  if (state.phase === 'allocate') {
+    bar.innerHTML = `<button class="btn btn-primary" onclick="lockAllocations()">Lock Allocations & Begin Rounds</button>`;
+  } else if (state.phase === 'reveal') {
+    const roundNum = state.currentRound + 2; // next round to reveal
+    const totalRounds = SCENARIOS[state.currentScenario].rounds.length;
+    if (roundNum <= totalRounds) {
+      bar.innerHTML = `<button class="btn btn-primary" onclick="revealNextRound()">Reveal Round ${roundNum}</button>`;
+    } else {
+      // All rounds revealed
+      if (state.currentScenario < SCENARIOS.length - 1) {
+        bar.innerHTML = `<button class="btn btn-primary" onclick="nextScenario()">Proceed to Scenario ${state.currentScenario + 2}</button>`;
+      } else {
+        bar.innerHTML = `<button class="btn btn-primary" onclick="showFinal()">View Final Results</button>`;
+      }
+    }
+  }
+}
+
+// ============================================================
+//  GAME LOGIC
+// ============================================================
+function lockAllocations() {
+  const allocs = [];
+  let valid = true;
+
+  state.groups.forEach((g, gi) => {
+    const a = {};
+    let sum = 0;
+    TRADE_COMPANIES.forEach(c => {
+      const val = Math.max(0, parseInt(document.getElementById(`alloc-${gi}-${c.id}`).value) || 0);
+      a[c.id] = val;
+      sum += val;
+    });
+    if (sum > 100) {
+      valid = false;
+      document.getElementById(`total-${gi}`).style.color = 'var(--red-wax)';
+      document.getElementById(`total-${gi}`).style.fontWeight = '900';
+    }
+    a.vault = Math.max(0, 100 - sum);
+    allocs.push(a);
+  });
+
+  if (!valid) {
+    alert('No group can allocate more than 100%. Reduce some investments so the total is 100% or less.');
+    return;
+  }
+
+  // Save allocations
+  state.allocations[state.currentScenario] = allocs;
+
+  // Disable inputs
+  document.querySelectorAll('#alloc-table input').forEach(inp => inp.disabled = true);
+
+  // Initialize history for this scenario
+  if (!state.history[state.currentScenario]) state.history[state.currentScenario] = [];
+
+  state.phase = 'reveal';
+  state.currentRound = -1;
+
+  document.getElementById('phase-indicator').textContent = '🎲 Allocations Locked — Reveal Rounds to See Your Returns';
+
+  revealNextRound();
+}
+
+let revealInProgress = false;
+
+function revealNextRound() {
+  if (revealInProgress) return;
+  revealInProgress = true;
+
+  state.currentRound++;
+  const sc = SCENARIOS[state.currentScenario];
+  const round = sc.rounds[state.currentRound];
+  const flavors = sc.roundFlavors[state.currentRound];
+  const allocs = state.allocations[state.currentScenario];
+
+  // Calculate new funds for each group
+  const roundResults = [];
+  state.groups.forEach((g, gi) => {
+    const prevFunds = state.currentRound === 0
+      ? g.funds
+      : state.history[state.currentScenario][state.currentRound - 1][gi];
+
+    let newFunds = 0;
+    COMPANIES.forEach(c => {
+      const pct = allocs[gi][c.id] / 100;
+      const invested = prevFunds * pct;
+      newFunds += invested * round[c.id];
+    });
+    roundResults.push(Math.round(newFunds));
+  });
+
+  state.history[state.currentScenario][state.currentRound] = roundResults;
+
+  // Show event narrative
+  const narrativeEl = document.getElementById('event-narrative');
+  narrativeEl.innerHTML = sc.roundEvents[state.currentRound];
+  narrativeEl.style.display = 'block';
+
+  // Build the sequential reveal HTML
+  const revealEl = document.getElementById('round-reveal');
+  revealEl.style.display = 'block';
+
+  let revealHTML = `<div class="round-number">Round ${state.currentRound + 1}</div>`;
+  revealHTML += `<div class="reveal-sequence" id="reveal-sequence">`;
+
+  COMPANIES.forEach(c => {
+    const m = round[c.id];
+    const stepCls = m > 1 ? 'step-positive' : m < 1 ? 'step-negative' : 'step-neutral';
+    const chipCls = m > 1 ? 'mult-positive' : m < 1 ? 'mult-negative' : 'mult-neutral';
+    const flavor = flavors[c.id];
+    revealHTML += `
+      <div class="reveal-step ${stepCls}" id="rstep-${c.id}">
+        <div class="mult-chip ${chipCls}">
+          <span class="mult-chip-ticker">${c.ticker}</span>
+          <span class="mult-chip-value">×${m.toFixed(2)}</span>
+        </div>
+        <div class="reveal-flavor">${flavor}</div>
+      </div>`;
+  });
+
+  revealHTML += `</div>`;
+  revealHTML += `<div class="round-scoreboard-update" id="round-score-msg">Ledger updated!</div>`;
+  revealEl.innerHTML = revealHTML;
+
+  // Hide teacher bar during animation
+  document.getElementById('teacher-bar').innerHTML = '';
+
+  // Scroll to narrative
+  narrativeEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Animate each company reveal sequentially
+  const companyIds = COMPANIES.map(c => c.id);
+  const DELAY_PER_STEP = 1200;
+  const INITIAL_DELAY = 800;
+
+  companyIds.forEach((cid, idx) => {
+    setTimeout(() => {
+      const step = document.getElementById(`rstep-${cid}`);
+      step.classList.add('visible', 'just-revealed');
+      // Remove pulse after animation completes
+      setTimeout(() => step.classList.remove('just-revealed'), 800);
+
+      // After last company, show scoreboard update and teacher controls
+      if (idx === companyIds.length - 1) {
+        setTimeout(() => {
+          document.getElementById('round-score-msg').classList.add('visible');
+
+          // Update phase indicator
+          const totalRounds = sc.rounds.length;
+          if (state.currentRound + 1 >= totalRounds) {
+            document.getElementById('phase-indicator').textContent =
+              `✅ All Rounds Complete — ${state.currentScenario < SCENARIOS.length - 1 ? 'Proceed to Next Scenario' : 'View Final Results'}`;
+            state.groups.forEach((g, gi) => {
+              g.funds = roundResults[gi];
+            });
+          } else {
+            document.getElementById('phase-indicator').textContent =
+              `🎲 Round ${state.currentRound + 1} of ${totalRounds} Revealed`;
+          }
+
+          renderScoreboard();
+          renderTeacherBar();
+          revealInProgress = false;
+        }, 600);
+      }
+    }, INITIAL_DELAY + idx * DELAY_PER_STEP);
+  });
+}
+
+function nextScenario() {
+  state.currentScenario++;
+  renderScenario();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showFinal() {
+  showScreen('final-screen');
+
+  // Rank groups by final funds
+  const ranked = state.groups.map((g, i) => ({ name: g.name, funds: g.funds, idx: i }))
+    .sort((a, b) => b.funds - a.funds);
+
+  let html = '<div class="final-podium">';
+  ranked.slice(0, 3).forEach((g, i) => {
+    const medals = ['🥇', '🥈', '🥉'];
+    html += `<div class="podium-place ${i === 0 ? 'first' : ''}">
+      <div class="podium-rank">${medals[i]}</div>
+      <div class="podium-name">${g.name}</div>
+      <div class="podium-amount">$${g.funds.toLocaleString('en-US', {maximumFractionDigits:0})}</div>
+    </div>`;
+  });
+  html += '</div>';
+
+  html += '<div class="divider"><span class="divider-icon">&#9830;</span></div>';
+  html += '<h2>Complete Standings</h2>';
+  html += '<table class="score-table"><thead><tr><th>Rank</th><th>Group</th><th>Starting</th><th>Final</th><th>Return</th></tr></thead><tbody>';
+
+  ranked.forEach((g, i) => {
+    const ret = ((g.funds - STARTING_FUNDS) / STARTING_FUNDS * 100).toFixed(1);
+    const cls = g.funds > STARTING_FUNDS ? 'money-up' : g.funds < STARTING_FUNDS ? 'money-down' : 'money-same';
+    html += `<tr ${i === 0 ? 'class="rank-1"' : ''}>
+      <td>${i + 1}</td>
+      <td>${g.name}</td>
+      <td>$${STARTING_FUNDS.toLocaleString()}</td>
+      <td class="${cls}">$${g.funds.toLocaleString('en-US', {maximumFractionDigits:0})}</td>
+      <td class="${cls}">${ret > 0 ? '+' : ''}${ret}%</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+
+  // Historical summary
+  html += `<div class="divider"><span class="divider-icon">&#9830;</span></div>`;
+  html += `<div class="event-narrative">
+    <strong>What Did We Learn?</strong> Over four centuries of medieval trade (c. 750–1350 CE), the most successful merchants were those who read historical conditions carefully, diversified their investments wisely, and adapted their strategy as the world changed around them. The Silk Road dominated the early centuries but was devastated by the Mongol conquests — only to be reborn under the Pax Mongolica. The Indian Ocean trade grew steadily as navigation technology improved. The trans-Saharan route went from near-impossible to enormously profitable as camels, organized caravans, and powerful West African empires transformed the desert crossing. And the Mediterranean evolved from a pirate-infested backwater to the commercial engine of a newly connected Europe. History rewards those who pay attention.
+  </div>`;
+
+  document.getElementById('final-content').innerHTML = html;
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+updateGroupNames();
+</script>
+
+</body>
+</html>
